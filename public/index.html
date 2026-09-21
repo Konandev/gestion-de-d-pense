@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mon Budget</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👛</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Applique le thème avant le rendu pour éviter le flash
+    (function () {
+      var t = localStorage.getItem('theme');
+      if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo" data-icon="wallet"></div>
+      <div>
+        <div class="brand-name">Mon Budget</div>
+        <div class="brand-sub">Gérez vos dépenses, construisez vos projets</div>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Navigation principale">
+      <a href="#dashboard" class="nav-item" data-view="dashboard"><span data-icon="home"></span>Tableau de bord</a>
+      <button class="nav-item" data-action="add"><span data-icon="plus-circle"></span>Ajouter une dépense</button>
+      <a href="#expenses" class="nav-item" data-view="expenses"><span data-icon="receipt"></span>Mes dépenses</a>
+      <a href="#categories" class="nav-item" data-view="categories"><span data-icon="tag"></span>Catégories</a>
+      <a href="#stats" class="nav-item" data-view="stats"><span data-icon="bar-chart"></span>Statistiques</a>
+      <a href="#export" class="nav-item" data-view="export"><span data-icon="download"></span>Exporter</a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <label class="switch-row">
+        <span class="switch-label"><span data-icon="sun-moon"></span>Mode sombre</span>
+        <input type="checkbox" id="themeToggle" class="switch" role="switch">
+      </label>
+      <div class="copyright"><span data-icon="copyright"></span><span id="year"></span> Mon Budget</div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ===== Contenu ===== -->
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Ouvrir le menu" data-icon="menu"></button>
+      <div class="brand-mobile"><div class="brand-logo sm" data-icon="wallet"></div><span>Mon Budget</span></div>
+
+      <label class="month-picker">
+6%%        <span data-icon="calendar"></span>
+        <input type="month" id="monthInput" aria-label="Mois affiché">
+        <span class="month-text" id="monthText"></span>
+        <span data-icon="chevron-down" class="chev"></span>
+      </label>
+
+      <div class="topbar-right">
+        <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" data-icon="sun"></button>
+        <div class="user"><span class="avatar">S</span><span class="user-name">Saviote</span></div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ---------- Tableau de bord ---------- -->
+      <section class="view" id="view-dashboard">
+        <div class="hello">
+          <span class="wave">👋</span>
+          <div>
+            <h1>Bonjour, Saviote !</h1>
+            <p>Voici un aperçu de vos dépenses pour ce mois.</p>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <article class="card kpi">
+            <div class="kpi-icon green" data-icon="wallet"></div>
+            <div><div class="kpi-label">Total du mois</div><div class="kpi-value" id="kTotal">—</div><div class="kpi-delta" id="kTotalD"></div></div>
+          </article>
+          <article class="card kpi">
+            <div class="kpi-icon blue" data-icon="card"></div>
+            <div><div class="kpi-label">Nombre de dépenses</div><div class="kpi-value" id="kCount">—</div><div class="kpi-delta" id="kCountD"></div></div>
+          </article>
+          <article class="card kpi">
+            <div class="kpi-icon purple" data-icon="tag"></div>
+            <div><div class="kpi-label">Dépense moyenne</div><div class="kpi-value" id="kAvg">—</div><div class="kpi-delta" id="kAvgD"></div></div>
+          </article>
+          <article class="card kpi">
+            <div class="kpi-icon red" data-icon="calendar"></div>
+            <div><div class="kpi-label">Plus grande dépense</div><div class="kpi-value" id="kMax">—</div><div class="kpi-delta muted" id="kMaxD"></div></div>
+          </article>
+        </div>
+
+        <div class="grid-3">
+          <article class="card chart-card">
+            <h2>Dépenses par catégorie</h2>
+            <div class="chart-wrap">
+              <div class="donut">
+                <canvas id="donut" aria-label="Répartition des dépenses par catégorie" role="img"></canvas>
+                <div class="donut-center"><strong id="donutTotal">0</strong><span>FCFA</span></div>
+              </div>
+              <ul class="legend" id="legend"></ul>
+            </div>
+          </article>
+
+          <article class="card filter-card">
+            <h2>Filtrer les dépenses</h2>
+            <label class="sr-only" for="fCategory">Catégorie</label>
+            <select id="fCategory" class="field"></select>
+            <label class="sr-only" for="fMonth">Mois</label>
+            <select id="fMonth" class="field"></select>
+            <button class="btn primary block" id="applyFilters"><span data-icon="filter"></span>Appliquer les filtres</button>
+          </article>
+
+          <article class="card export-card">
+            <h2>Exportation</h2>
+            <p class="muted-text">Téléchargez vos données en Excel</p>
+            <a class="btn excel block" id="xlsxBtn1" href="#"><span data-icon="sheet"></span>Exporter en Excel</a>
+            <a class="btn outline block" id="csvBtn1" href="#"><span data-icon="file-text"></span>Exporter en CSV</a>
+          </article>
+        </div>
+
+        <article class="card table-card">
+          <div class="table-head">
+            <h2>Dernières dépenses</h2>
+            <a href="#expenses" class="link">Voir toutes les dépenses <span data-icon="arrow-right"></span></a>
+          </div>
+          <div class="table-scroll">
+            <table class="table">
+              <thead><tr><th>Date</th><th>Catégorie</th><th class="num">Montant</th><th class="note-col">Note</th><th class="actions-col">Actions</th></tr></thead>
+              <tbody id="recentBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- ---------- Mes dépenses ---------- -->
+      <section class="view" id="view-expenses" hidden>
+        <div class="page-head">
+          <h1>Mes dépenses</h1>
+          <button class="btn primary" data-action="add"><span data-icon="plus"></span>Ajouter une dépense</button>
+        </div>
+        <article class="card table-card">
+          <div class="table-scroll">
+            <table class="table">
+              <thead><tr><th>Date</th><th>Catégorie</th><th class="num">Montant</th><th class="note-col">Note</th><th class="actions-col">Actions</th></tr></thead>
+              <tbody id="allBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- ---------- Catégories ---------- -->
+      <section class="view" id="view-categories" hidden>
+        <div class="page-head"><h1>Catégories</h1></div>
+        <div class="cat-grid" id="catGrid"></div>
+      </section>
+
+      <!-- ---------- Statistiques ---------- -->
+      <section class="view" id="view-stats" hidden>
+        <div class="page-head"><h1>Statistiques</h1></div>
+        <article class="card chart-card">
+          <h2>Évolution sur 6 mois</h2>
+          <div class="bar-wrap"><canvas id="bars" aria-label="Total des dépenses par mois" role="img"></canvas></div>
+        </article>
+      </section>
+
+      <!-- ---------- Exporter ---------- -->
+      <section class="view" id="view-export" hidden>
+        <div class="page-head"><h1>Exporter</h1></div>
+        <article class="card export-card wide">
+          <p class="muted-text">Téléchargez les dépenses du mois sélectionné (filtre de catégorie inclus).</p>
+          <div class="btn-row">
+            <a class="btn excel" id="xlsxBtn2" href="#"><span data-icon="sheet"></span>Exporter en Excel</a>
+            <a class="btn outline" id="csvBtn2" href="#"><span data-icon="file-text"></span>Exporter en CSV</a>
+          </div>
+        </article>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== Navigation mobile ===== -->
+<nav class="tabbar" aria-label="Navigation mobile">
+  <a href="#dashboard" data-view="dashboard"><span data-icon="home"></span>Accueil</a>
+  <a href="#expenses" data-view="expenses"><span data-icon="receipt"></span>Dépenses</a>
+  <button class="fab" data-action="add" aria-label="Ajouter une dépense" data-icon="plus"></button>
+  <a href="#stats" data-view="stats"><span data-icon="bar-chart"></span>Statistiques</a>
+  <a href="#categories" data-view="categories"><span data-icon="tag"></span>Catégories</a>
+</nav>
+
+<!-- ===== Modale ajout / modification ===== -->
+<dialog id="modal" class="modal">
+  <form method="dialog" id="expenseForm" novalidate>
+    <div class="modal-head">
+      <h2 id="modalTitle">Ajouter une dépense</h2>
+      <button type="button" class="icon-btn" id="closeModal" aria-label="Fermer" data-icon="x"></button>
+    </div>
+
+    <div class="form-group">
+      <label for="amount">Montant (FCFA) <span class="req">*</span></label>
+      <input type="number" id="amount" class="field" min="1" step="1" inputmode="numeric" placeholder="Ex : 25000" required>
+    </div>
+    <div class="form-group">
+      <label for="category">Catégorie <span class="req">*</span></label>
+      <select id="category" class="field" required></select>
+    </div>
+    <div class="form-group">
+      <label for="date">Date <span class="req">*</span></label>
+      <input type="date" id="date" class="field" required>
+    </div>
+    <div class="form-group">
+      <label for="note">Note (optionnel)</label>
+      <textarea id="note" class="field" rows="3" maxlength="200" placeholder="Ex : Courses du mois"></textarea>
+    </div>
+
+    <p class="form-error" id="formError" role="alert" hidden></p>
+
+    <div class="modal-foot">
+      <button type="button" class="btn outline" id="cancelModal">Annuler</button>
+      <button type="submit" class="btn primary"><span data-icon="save"></span>Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

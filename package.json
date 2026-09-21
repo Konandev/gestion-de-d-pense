@@ -1,0 +1,16 @@
+{
+  "name": "mon-budget",
+  "version": "1.0.0",
+  "description": "Gestionnaire de dépenses — Node.js, Express, SQLite, Chart.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "exceljs": "^4.4.0",
+    "express": "^5.0.0"
+  }
+}
